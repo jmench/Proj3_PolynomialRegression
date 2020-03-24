@@ -1,15 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# read csv file into np array
 def read_csv(filename):
     return np.genfromtxt(filename, delimiter=',')
 
-def make_plot(data, title, b0, b1):
+# plot all the data points and the corresponding line
+def make_plot(data, title, coef):
     x_vals = np.zeros(len(data))
     y_vals = np.zeros(len(data))
 
     x = np.linspace(-2, 2, 100)
-    y = b0 + b1*x
+    y = 0
+    for i in range(len(coef)):
+        y += coef[i] * (x**i)
 
     for i in range(len(data)):
         x_vals[i] = data[i][0]
@@ -22,25 +26,67 @@ def make_plot(data, title, b0, b1):
     plt.title(title)
     plt.show()
 
-def predict(row, coefficients):
-	yhat = coefficients[0]
-	for i in range(len(row)-1):
-		yhat += coefficients[i + 1] * row[i]
-	return yhat
+def get_prediction(coef, row):
+    #set prediciton to intercept value to begin
+    prediction = 0
+    x = row[0]
+    for i in range(len(coef)):
+        prediction += coef[i] * (x ** i)
+    return prediction
+
+def update_coef(data, learn_rate, epochs, coef):
+    error_arr = np.zeros(epochs)
+    m = 1/len(data)
+    for epoch in range(epochs):
+        sum_error = 0
+        for row in data:
+            # Get predicted value here
+            prediction = get_prediction(coef, row)
+            #print(prediction)
+            actual = row[1]
+            err = prediction - actual
+            sum_error += err**2
+            #update all coef
+            for i in range(len(coef)):
+                coef[i] = coef[i] - learn_rate * (1/m) * err * (row[0]**i)
+        error_arr[epoch] = sum_error
+    mse = np.mean(error_arr)
+    print('The MSE of this model is ' + str(mse))
+    return coef
 
 def main():
     syn1 = read_csv('./data/synthetic-1.csv')
     syn2 = read_csv('./data/synthetic-2.csv')
     syn3 = read_csv('./data/synthetic-3.csv')
 
-    coef = [0.4, 0.8]
+    coef1 = [0.0, 0.0]
+    coef2 = [0.0, 0.0, 0.0]
+    coef4 = [0.0, 0.0, 0.0, 0.0, 0.0]
+    coef7 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-    make_plot(syn1, "Synthetic 1", coef[0], coef[1])
-    #make_plot(syn2, "Synthetic 2")
-    #make_plot(syn3, "Synthetic 3")
+    coef_arr = [[coef1, '1st order'], [coef2, '2nd order'], [coef4, '4th order'], [coef7, '7th order']]
 
-    for row in syn1:
-        yhat = predict(row, coef)
-        print("Expected=%.3f, Predicted=%.3f" % (row[-1], yhat))
+    for i in range(len(coef_arr)):
+        if i < 3:
+            alpha = .00001
+        else:
+            alpha = .000001
+        weights = update_coef(syn1, alpha, 100, coef_arr[i][0])
+        print('Weight results for syn1 and ' + coef_arr[i][1] + ':')
+        print(weights)
+        print()
+        make_plot(syn1, "Synthetic 1 - " + coef_arr[i][1], weights)
+
+        weights = update_coef(syn2, alpha, 100, coef_arr[i][0])
+        print('Weight results for syn2 and ' + coef_arr[i][1] + ':')
+        print(weights)
+        print()
+        make_plot(syn2, "Synthetic 2 - " + coef_arr[i][1], weights)
+
+        weights = update_coef(syn3, alpha, 100, coef_arr[i][0])
+        print('Weight results for syn3  and ' + coef_arr[i][1] + ':')
+        print(weights)
+        print()
+        make_plot(syn3, "Synthetic 3 - " + coef_arr[i][1], weights)
 
 if __name__== "__main__": main()
