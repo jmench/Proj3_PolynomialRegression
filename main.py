@@ -26,13 +26,15 @@ def make_plot(data, title, coef):
     plt.title(title)
     plt.show()
 
-def get_prediction(coef, row):
+def get_error(coef, row):
     #set prediciton to intercept value to begin
     prediction = 0
     x = row[0]
+    actual = row[1]
     for i in range(len(coef)):
         prediction += coef[i] * (x ** i)
-    return prediction
+    error = prediction - actual
+    return error
 
 def update_coef(data, learn_rate, epochs, coef):
     error_arr = np.zeros(epochs)
@@ -41,16 +43,13 @@ def update_coef(data, learn_rate, epochs, coef):
         sum_error = 0
         for row in data:
             # Get predicted value here
-            prediction = get_prediction(coef, row)
-            #print(prediction)
-            actual = row[1]
-            err = prediction - actual
-            sum_error += err**2
+            err = get_error(coef, row)
             #update all coef
             for i in range(len(coef)):
                 coef[i] = coef[i] - learn_rate * (1/m) * err * (row[0]**i)
+            sum_error += err**2
         error_arr[epoch] = sum_error
-    mse = np.mean(error_arr)
+    mse = round(np.mean(error_arr), 3)
     print('The MSE of this model is ' + str(mse))
     return coef
 
@@ -71,20 +70,26 @@ def main():
             alpha = .00001
         else:
             alpha = .000001
-        weights = update_coef(syn1, alpha, 100, coef_arr[i][0])
+        coefs = update_coef(syn1, alpha, 100, coef_arr[i][0])
         print('Weight results for syn1 and ' + coef_arr[i][1] + ':')
+        weights = np.array(coefs)
+        np.around(weights, 3)
         print(weights)
         print()
         make_plot(syn1, "Synthetic 1 - " + coef_arr[i][1], weights)
 
-        weights = update_coef(syn2, alpha, 100, coef_arr[i][0])
+        coefs = update_coef(syn2, alpha, 100, coef_arr[i][0])
         print('Weight results for syn2 and ' + coef_arr[i][1] + ':')
+        weights = np.array(coefs)
+        np.around(weights, 3)
         print(weights)
         print()
         make_plot(syn2, "Synthetic 2 - " + coef_arr[i][1], weights)
 
-        weights = update_coef(syn3, alpha, 100, coef_arr[i][0])
+        coefs = update_coef(syn3, alpha, 100, coef_arr[i][0])
         print('Weight results for syn3  and ' + coef_arr[i][1] + ':')
+        weights = np.array(coefs)
+        np.around(weights, 3)
         print(weights)
         print()
         make_plot(syn3, "Synthetic 3 - " + coef_arr[i][1], weights)
